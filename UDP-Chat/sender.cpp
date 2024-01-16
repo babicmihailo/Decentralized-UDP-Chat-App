@@ -9,10 +9,6 @@ void Sender::run()
     {
         std::string userInput;
         std::getline(std::cin, userInput);
-        //QString userInput = textStream.readLine();
-        //emit sendMessage(userInput);
         emit sendMessage(QString::fromStdString(userInput));
-        QThread::sleep(1000);
-        std::cout << "SALJEM" << std::endl;
     }
 }

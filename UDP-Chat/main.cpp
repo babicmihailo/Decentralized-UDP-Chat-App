@@ -1,6 +1,5 @@
 #include <QCoreApplication>
-#include <iostream>
-#include "receiver.h"
+#include "client.h"
 #include "sender.h"
 
 int main(int argc, char *argv[])
@@ -17,14 +16,10 @@ int main(int argc, char *argv[])
     Client client(username);
     client.init();
 
-    //Receiver dataReceiver(&client);
-    //dataReceiver.moveToThread(&dataReceiver);
     Sender dataSender;
 
-    //QObject::connect(&dataReceiver, &Receiver::receiveBroadcast, &client, &Client::receiveBroadcast);
     QObject::connect(&dataSender, &Sender::sendMessage, &client, &Client::sendMessage);
 
-    //dataReceiver.start();
     dataSender.start();
 
     return a.exec();

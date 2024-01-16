@@ -11,7 +11,6 @@ CONFIG += c++17 cmdline
 SOURCES += \
         client.cpp \
         main.cpp \
-        receiver.cpp \
         sender.cpp
 
 # Default rules for deployment.
@@ -21,5 +20,4 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     client.h \
-    receiver.h \
     sender.h

@@ -5,20 +5,31 @@ Client::Client(QString username)
 {
     this->username = username;
     this->address = QHostAddress::LocalHost;
-    this->addressBroadcast = QHostAddress(BROADCAST_ADDRESS);
     this->socketClient = new QUdpSocket(this);
     this->socketBroadcast = new QUdpSocket(this);
-    if (!socketClient->bind(this->address, 0)) {
+
+    if (!socketClient->bind(address, 0)) {
         qDebug() << "Error binding client socket:" << socketClient->errorString();
     }
 
-    if (!socketBroadcast->bind(this->addressBroadcast, BROADCAST_PORT, QAbstractSocket::ReuseAddressHint)) {
+    if (!socketBroadcast->bind(address, BROADCAST_PORT, QAbstractSocket::ReuseAddressHint | QAbstractSocket::ShareAddress)) {
         qDebug() << "Error binding broadcast socket:" << socketBroadcast->errorString();
     }
 
-    this->port = this->socketClient->localPort();
-    connect(this->socketClient, SIGNAL(readyRead()), this, SLOT(processMessage()));
-    connect(this->socketBroadcast, SIGNAL(readyRead()), this, SLOT(processBroadcast()));
+    this->port = socketClient->localPort();
+
+    connect(socketClient, SIGNAL(readyRead()), this, SLOT(processMessage()));
+    connect(socketBroadcast, SIGNAL(readyRead()), this, SLOT(processBroadcast()));
+}
+
+Client::~Client()
+{
+    QByteArray data;
+    data.clear();
+    data.append("DISCONNECT");
+    socketClient->writeDatagram(data, address, BROADCAST_PORT);
+    socketClient->close();
+    socketBroadcast->close();
 }
 
 void Client::init()
@@ -26,8 +37,16 @@ void Client::init()
     QByteArray data;
     data.clear();
     data.append("DISCOVERY=");
-    data.append(this->username.toUtf8());
-    this->socketClient->writeDatagram(data, this->addressBroadcast, BROADCAST_PORT);
+    data.append(username.toUtf8());
+    qint64 written = socketClient->writeDatagram(data, address, BROADCAST_PORT);
+    if (written == -1)
+    {
+        qDebug() << "Error sending datagram: " << socketClient->errorString();
+    }
+    else
+    {
+        qDebug() << "Datagram sent sucessfully. written: " << written;
+    }
 }
 
 void Client::processBroadcast()
@@ -38,7 +57,7 @@ void Client::processBroadcast()
     while (socketBroadcast->hasPendingDatagrams()) {
         datagram.resize(socketBroadcast->pendingDatagramSize());
         socketBroadcast->readDatagram(datagram.data(), datagram.size(), &sender, &senderPort);
-        if (senderPort != this->port)
+        if (senderPort != port)
         {
             QString data = QString::fromUtf8(datagram);
             if (data.startsWith("DISCOVERY="))
@@ -133,7 +152,7 @@ void Client::sendMessage(QString message)
     data.append(message.toUtf8());
     for (auto it = clients.constBegin(); it != clients.constEnd(); ++it) {
         quint16 port = it.key();
-        this->socketClient->writeDatagram(data, this->address, port);
+        socketClient->writeDatagram(data, address, port);
     }
 }
 
@@ -142,7 +161,7 @@ void Client::clientRespond(quint16 senderPort)
     QByteArray data;
     data.clear();
     data.append("DISCOVERY_RESP=");
-    data.append(this->username.toUtf8());
-    socketClient->writeDatagram(data, this->address, senderPort);
+    data.append(username.toUtf8());
+    socketClient->writeDatagram(data, address, senderPort);
 }
 

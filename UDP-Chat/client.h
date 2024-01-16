@@ -2,7 +2,6 @@
 #define CLIENT_H
 
 #define BROADCAST_PORT 12345
-#define BROADCAST_ADDRESS "127.127.127.127"
 #define MAX_BUFFER 1024
 
 #include <QObject>
@@ -15,6 +14,7 @@ class Client : public QObject
     Q_OBJECT
 public:
     Client(QString username);
+    ~Client();
     void init();
 
 public slots:
@@ -25,7 +25,6 @@ private:
     QUdpSocket* socketBroadcast;
     QUdpSocket* socketClient;
     QHostAddress address;
-    QHostAddress addressBroadcast;
     quint16 port;
     QMap<quint16, QString> clients;
 
