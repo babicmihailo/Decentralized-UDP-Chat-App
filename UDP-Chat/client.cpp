@@ -1,5 +1,6 @@
 #include "client.h"
-#include <iostream>
+#include "qcoreapplication.h"
+#include <QVariant>
 
 Client::Client(QString username)
 {
@@ -20,16 +21,7 @@ Client::Client(QString username)
 
     connect(socketClient, SIGNAL(readyRead()), this, SLOT(processMessage()));
     connect(socketBroadcast, SIGNAL(readyRead()), this, SLOT(processBroadcast()));
-}
 
-Client::~Client()
-{
-    QByteArray data;
-    data.clear();
-    data.append("DISCONNECT");
-    socketClient->writeDatagram(data, address, BROADCAST_PORT);
-    socketClient->close();
-    socketBroadcast->close();
 }
 
 void Client::init()
@@ -38,15 +30,29 @@ void Client::init()
     data.clear();
     data.append("DISCOVERY=");
     data.append(username.toUtf8());
-    qint64 written = socketClient->writeDatagram(data, address, BROADCAST_PORT);
+    socketBroadcast->setSocketOption(QAbstractSocket::MulticastTtlOption, QVariant(1));
+    socketBroadcast->joinMulticastGroup(QHostAddress("239.255.0.1"));
+
+    qint64 written = socketClient->writeDatagram(data, QHostAddress::Broadcast, BROADCAST_PORT);
     if (written == -1)
     {
         qDebug() << "Error sending datagram: " << socketClient->errorString();
     }
-    else
+}
+
+void Client::cleanup()
+{
+    QByteArray data;
+    data.clear();
+    data.append("DISCONNECT");
+    qint64 written = socketClient->writeDatagram(data, QHostAddress::Broadcast, BROADCAST_PORT);
+    if (written == -1)
     {
-        qDebug() << "Datagram sent sucessfully. written: " << written;
+        qDebug() << "Error sending datagram: " << socketClient->errorString();
     }
+    socketClient->close();
+    socketBroadcast->close();
+    QCoreApplication::quit();
 }
 
 void Client::processBroadcast()
@@ -103,8 +109,7 @@ void Client::clientRemove(quint16 senderPort)
     {
         QString removedUsername = clients.value(senderPort);
         clients.remove(senderPort);
-
-        std::cout << removedUsername.toStdString() << " :DISCONNECTED" << std::endl;;
+        qDebug().noquote().nospace() << "[-] " << removedUsername;
     }
     else
     {
@@ -118,7 +123,7 @@ void Client::clientNew(quint16 senderPort, QString data)
     if (!clients.contains(senderPort) || clients.value(senderPort) != senderUsername)
     {
         clients.insert(senderPort, senderUsername);
-        std::cout << senderUsername.toStdString() << " :NEW USER" << std::endl;
+        qDebug().noquote().nospace() << "[+] " << senderUsername;
         clientRespond(senderPort);
     }
     else
@@ -132,7 +137,7 @@ void Client::clientAdd(quint16 senderPort, QString senderUsername)
     senderUsername = senderUsername.mid(15);
     if (!clients.contains(senderPort) || clients.value(senderPort) != senderUsername)
     {
-        std::cout << senderUsername.toStdString() << " :EXISTING USER" << std::endl;
+        qDebug().noquote().nospace() << "[=] " << senderUsername;
         clients.insert(senderPort, senderUsername);
     }
 }
@@ -141,7 +146,7 @@ void Client::clientMessage(quint16 senderPort, QString message)
 {
     message = message.mid(4);
     QString senderUsername = clients.value(senderPort);
-    std::cout << message.toStdString() << " :" << senderUsername.toStdString() << std::endl;
+    qDebug().noquote().nospace() << "(" << senderUsername <<") >> " << message;
 }
 
 void Client::sendMessage(QString message)
@@ -152,7 +157,11 @@ void Client::sendMessage(QString message)
     data.append(message.toUtf8());
     for (auto it = clients.constBegin(); it != clients.constEnd(); ++it) {
         quint16 port = it.key();
-        socketClient->writeDatagram(data, address, port);
+        qint64 written = socketClient->writeDatagram(data, address, port);
+        if (written == -1)
+        {
+            qDebug() << "Error sending datagram: " << socketClient->errorString();
+        }
     }
 }
 
@@ -164,4 +173,6 @@ void Client::clientRespond(quint16 senderPort)
     data.append(username.toUtf8());
     socketClient->writeDatagram(data, address, senderPort);
 }
+
+
 

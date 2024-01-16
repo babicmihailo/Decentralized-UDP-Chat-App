@@ -21,6 +21,7 @@ private:
 
 signals:
     void sendMessage(QString message);
+    void cleanup();
 };
 
 #endif // SENDER_H

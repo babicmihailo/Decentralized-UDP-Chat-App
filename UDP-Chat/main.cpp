@@ -19,6 +19,7 @@ int main(int argc, char *argv[])
     Sender dataSender;
 
     QObject::connect(&dataSender, &Sender::sendMessage, &client, &Client::sendMessage);
+    QObject::connect(&dataSender, &Sender::cleanup, &client, &Client::cleanup);
 
     dataSender.start();
 

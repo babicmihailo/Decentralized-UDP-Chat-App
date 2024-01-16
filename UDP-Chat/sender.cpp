@@ -9,6 +9,16 @@ void Sender::run()
     {
         std::string userInput;
         std::getline(std::cin, userInput);
-        emit sendMessage(QString::fromStdString(userInput));
+        QString message = QString::fromStdString(userInput);
+        if(message.startsWith("quit"))
+        {
+            emit cleanup();
+            break;
+        }
+        else
+        {
+            emit sendMessage(message);
+        }
     }
+    quit();
 }

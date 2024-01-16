@@ -14,11 +14,11 @@ class Client : public QObject
     Q_OBJECT
 public:
     Client(QString username);
-    ~Client();
     void init();
 
 public slots:
     void sendMessage(QString message);
+    void cleanup();
 
 private:
     QString username;
