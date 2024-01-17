@@ -12,12 +12,12 @@ void Sender::run()
         QString message = QString::fromStdString(userInput);
         if(message.startsWith("quit"))
         {
-            emit cleanup();
+            emit CleanUp();
             break;
         }
         else
         {
-            emit sendMessage(message);
+            emit SendMessage(message);
         }
     }
     quit();

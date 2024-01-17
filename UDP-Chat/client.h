@@ -14,11 +14,11 @@ class Client : public QObject
     Q_OBJECT
 public:
     Client(QString username);
-    void init();
+    void Init();
 
 public slots:
-    void sendMessage(QString message);
-    void cleanup();
+    void SendMessage(QString message);
+    void CleanUp();
 
 private:
     QString username;
@@ -28,16 +28,16 @@ private:
     quint16 port;
     QMap<quint16, QString> clients;
 
-    void readMessage();
-    void clientNew(quint16 senderPort, QString data);
-    void clientAdd(quint16 senderPort, QString senderUsername);
-    void clientRemove(quint16 senderPort);
-    void clientMessage(quint16 senderPort, QString message);
-    void clientRespond(quint16 senderPort);
+    void ReadMessage();
+    void ClientNew(quint16 senderPort, QString data);
+    void ClientAdd(quint16 senderPort, QString senderUsername);
+    void ClientRemove(quint16 senderPort);
+    void ClientMessage(quint16 senderPort, QString message);
+    void ClientRespond(quint16 senderPort);
 
 private slots:
-    void processMessage();
-    void processBroadcast();
+    void ProcessMessage();
+    void ProcessBroadcast();
 
 
 };

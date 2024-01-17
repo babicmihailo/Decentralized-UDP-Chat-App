@@ -24,7 +24,7 @@ Client::Client(QString username)
 
 }
 
-void Client::init()
+void Client::Init()
 {
     QByteArray data;
     data.clear();
@@ -40,7 +40,7 @@ void Client::init()
     }
 }
 
-void Client::cleanup()
+void Client::CleanUp()
 {
     QByteArray data;
     data.clear();
@@ -55,7 +55,7 @@ void Client::cleanup()
     QCoreApplication::quit();
 }
 
-void Client::processBroadcast()
+void Client::ProcessBroadcast()
 {
     QByteArray datagram;
     QHostAddress sender;
@@ -68,17 +68,17 @@ void Client::processBroadcast()
             QString data = QString::fromUtf8(datagram);
             if (data.startsWith("DISCOVERY="))
             {
-                clientNew(senderPort, data);
+                ClientNew(senderPort, data);
             }
             if (data.startsWith("DISCONNECT"))
             {
-                clientRemove(senderPort);
+                ClientRemove(senderPort);
             }
         }
     }
 }
 
-void Client::processMessage()
+void Client::ProcessMessage()
 {
     qint64 datagramSize;
     QHostAddress address;
@@ -94,16 +94,16 @@ void Client::processMessage()
 
         if (data.startsWith("DISCOVERY_RESP="))
         {
-            clientAdd(senderPort, data);
+            ClientAdd(senderPort, data);
         }
         else if (data.startsWith("MSG="))
         {
-            clientMessage(senderPort, data);
+            ClientMessage(senderPort, data);
         }
     }
 }
 
-void Client::clientRemove(quint16 senderPort)
+void Client::ClientRemove(quint16 senderPort)
 {
     if (clients.contains(senderPort))
     {
@@ -117,14 +117,14 @@ void Client::clientRemove(quint16 senderPort)
     }
 }
 
-void Client::clientNew(quint16 senderPort, QString data)
+void Client::ClientNew(quint16 senderPort, QString data)
 {
     QString senderUsername = data.mid(10);
     if (!clients.contains(senderPort) || clients.value(senderPort) != senderUsername)
     {
         clients.insert(senderPort, senderUsername);
         qDebug().noquote().nospace() << "[+] " << senderUsername;
-        clientRespond(senderPort);
+        ClientRespond(senderPort);
     }
     else
     {
@@ -132,7 +132,7 @@ void Client::clientNew(quint16 senderPort, QString data)
     }
 }
 
-void Client::clientAdd(quint16 senderPort, QString senderUsername)
+void Client::ClientAdd(quint16 senderPort, QString senderUsername)
 {
     senderUsername = senderUsername.mid(15);
     if (!clients.contains(senderPort) || clients.value(senderPort) != senderUsername)
@@ -142,14 +142,14 @@ void Client::clientAdd(quint16 senderPort, QString senderUsername)
     }
 }
 
-void Client::clientMessage(quint16 senderPort, QString message)
+void Client::ClientMessage(quint16 senderPort, QString message)
 {
     message = message.mid(4);
     QString senderUsername = clients.value(senderPort);
     qDebug().noquote().nospace() << "(" << senderUsername <<") >> " << message;
 }
 
-void Client::sendMessage(QString message)
+void Client::SendMessage(QString message)
 {
     QByteArray data;
     data.clear();
@@ -165,7 +165,7 @@ void Client::sendMessage(QString message)
     }
 }
 
-void Client::clientRespond(quint16 senderPort)
+void Client::ClientRespond(quint16 senderPort)
 {
     QByteArray data;
     data.clear();
@@ -173,6 +173,3 @@ void Client::clientRespond(quint16 senderPort)
     data.append(username.toUtf8());
     socketClient->writeDatagram(data, address, senderPort);
 }
-
-
-

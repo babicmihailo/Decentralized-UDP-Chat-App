@@ -20,8 +20,8 @@ private:
     QTimer timer;
 
 signals:
-    void sendMessage(QString message);
-    void cleanup();
+    void SendMessage(QString message);
+    void CleanUp();
 };
 
 #endif // SENDER_H

@@ -14,12 +14,12 @@ int main(int argc, char *argv[])
     QString username = a.arguments().at(1);
 
     Client client(username);
-    client.init();
+    client.Init();
 
     Sender dataSender;
-
-    QObject::connect(&dataSender, &Sender::sendMessage, &client, &Client::sendMessage);
-    QObject::connect(&dataSender, &Sender::cleanup, &client, &Client::cleanup);
+    
+    QObject::connect(&dataSender, &Sender::SendMessage, &client, &Client::SendMessage);
+    QObject::connect(&dataSender, &Sender::CleanUp, &client, &Client::CleanUp);
 
     dataSender.start();
 
